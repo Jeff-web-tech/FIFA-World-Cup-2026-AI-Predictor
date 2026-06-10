@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <title>
+        World Cup AI Simulation
+    </title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='style.css') }}">
+
+</head>
+
+<body class="simulation-page">
+
+    <div class="container">
+
+        <h1>
+            🌍 World Cup AI Simulation
+        </h1>
+
+        <!-- GROUP STAGE -->
+
+        <h2>
+            Group Stage
+        </h2>
+
+        <div class="group-grid">
+
+            {% for group, standings in results.groups.items() %}
+
+            <div class="group-card">
+
+                <h3>
+                    {{ group }}
+                </h3>
+
+                <div class="match-list">
+
+                    <h4>Match Scores</h4>
+
+                    {% for match in standings['matches'] %}
+
+                    <div class="match-row">
+
+                        <span>
+                            {{ match.home }} {{ match.home_goals }} - {{ match.away_goals }} {{ match.away }}
+                        </span>
+
+                        {% if match.decided_by != "90" %}
+
+                        <span>
+                            ({{ match.decided_by }})
+                        </span>
+
+                        {% endif %}
+
+                    </div>
+
+                    {% endfor %}
+
+                </div>
+
+                {% for team, stats in standings['standings'] %}
+
+                <div class="team-row">
+
+                    <span>
+                        {{ team }}
+                    </span>
+
+                    <span>
+                        {{ stats.points }} pts
+                    </span>
+
+                </div>
+
+                {% endfor %}
+
+            </div>
+
+            {% endfor %}
+
+        </div>
+
+        <!-- QUARTERS -->
+
+        <h2>
+            Quarter Finals
+        </h2>
+
+        <div class="knockout-grid">
+
+            {% for match in results.quarters %}
+
+            <div class="match-card">
+
+                <p>
+                    {{ match.home }}
+                    vs
+                    {{ match.away }}
+                </p>
+
+                <p>
+                    Score: {{ match.home_goals }} - {{ match.away_goals }}
+                    {% if match.decided_by != "90" %}
+                    ({{ match.decided_by }})
+                    {% endif %}
+                </p>
+
+                <h3>
+                    Winner:
+                    {{ match.winner }}
+                </h3>
+
+            </div>
+
+            {% endfor %}
+
+        </div>
+
+        <!-- SEMIS -->
+
+        <h2>
+            Semi Finals
+        </h2>
+
+        <div class="knockout-grid">
+
+            {% for match in results.semis %}
+
+            <div class="match-card">
+
+                <p>
+                    {{ match.home }}
+                    vs
+                    {{ match.away }}
+                </p>
+
+                <p>
+                    Score: {{ match.home_goals }} - {{ match.away_goals }}
+                    {% if match.decided_by != "90" %}
+                    ({{ match.decided_by }})
+                    {% endif %}
+                </p>
+
+                <h3>
+                    Winner:
+                    {{ match.winner }}
+                </h3>
+
+            </div>
+
+            {% endfor %}
+
+        </div>
+
+        <!-- FINAL -->
+
+        <h2>
+            Final
+        </h2>
+
+        <div class="final-card">
+
+            <p>
+                {{ results.final.home }}
+                vs
+                {{ results.final.away }}
+            </p>
+
+            <p>
+                Score: {{ results.final.home_goals }} - {{ results.final.away_goals }}
+                {% if results.final.decided_by != "90" %}
+                    ({{ results.final.decided_by }})
+                {% endif %}
+            </p>
+
+            <h2>
+                🏆 Champion:
+                {{ results.final.winner }}
+            </h2>
+
+        </div>
+
+        <h2>
+            Champion Odds
+        </h2>
+
+        <div class="odds-grid">
+
+            {% for team in champion_odds %}
+
+            <div class="odds-card">
+
+                <h3>
+                    {{ team.team }}
+                </h3>
+
+                <p>
+                    {{ team.percentage }}%
+                </p>
+
+            </div>
+
+            {% endfor %}
+
+        </div>
+
+    </div>
+
+</body>
+
+</html>

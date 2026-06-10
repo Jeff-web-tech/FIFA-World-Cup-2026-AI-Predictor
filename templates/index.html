@@ -1,0 +1,496 @@
+<!-- templates/index.html -->
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>World Cup 2026 AI</title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='style.css') }}">
+
+    <link rel="preconnect"
+          href="https://fonts.googleapis.com">
+
+    <link rel="preconnect"
+          href="https://fonts.gstatic.com"
+          crossorigin>
+
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+          rel="stylesheet">
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+</head>
+
+<body>
+
+    <!-- HERO -->
+
+    <div class="hero">
+
+        <h1>
+            🌍 World Cup 2026 AI Predictor
+        </h1>
+
+        <p>
+            AI-powered football predictions
+            and tournament intelligence
+        </p>
+
+        <div class="hero-buttons">
+
+            <a href="/simulate-world-cup" class="btn-link">
+
+                <button class="simulate-btn">
+
+                    🎲 Simulate World Cup
+
+                </button>
+
+            </a>
+
+        </div>
+
+    </div>
+
+    <div class="container">
+
+        <!-- GROUPS SECTION -->
+
+        <h2 class="section-title">
+
+            🏆 World Cup 2026 Groups
+
+        </h2>
+
+        <div class="groups-grid">
+
+            {% for group_name, teams in groups.items() %}
+
+            <div class="group-card">
+
+                <h3 class="group-title">{{ group_name }}</h3>
+
+                <div class="group-teams">
+
+                    {% for team in teams %}
+
+                    <div class="group-team">
+
+                        <span class="team-flag">{{ flags.get(team, '🏳️') }}</span>
+
+                        <span class="team-name">{{ team }}</span>
+
+                    </div>
+
+                    {% endfor %}
+
+                </div>
+
+            </div>
+
+            {% endfor %}
+
+        </div>
+
+
+        <!-- RESULT CARD -->
+
+        <div class="result-card"
+             id="prediction-result"
+             style="display:none;">
+
+            <div class="prediction-box home-win">
+
+                <h2 id="matchup-text" class="matchup-text">
+                    - vs -
+                </h2>
+
+                <h1 id="prediction-title">
+
+                    Prediction
+
+                </h1>
+
+                <p id="prediction-score" class="prediction-score">
+                    Score: -
+                </p>
+
+            </div>
+
+            <!-- HOME -->
+
+            <div class="probability-card">
+
+                <p id="home-text">
+
+                    Home Win — 0%
+
+                </p>
+
+                <div class="bar">
+
+                    <div class="fill home-fill"
+                         id="home-bar"
+                         style="width:0%">
+                    </div>
+
+                </div>
+
+            </div>
+
+            <!-- DRAW -->
+
+            <div class="probability-card">
+
+                <p id="draw-text">
+
+                    Draw — 0%
+
+                </p>
+
+                <div class="bar">
+
+                    <div class="fill draw-fill"
+                         id="draw-bar"
+                         style="width:0%">
+                    </div>
+
+                </div>
+
+            </div>
+
+            <!-- AWAY -->
+
+            <div class="probability-card">
+
+                <p id="away-text">
+
+                    Away Win — 0%
+
+                </p>
+
+                <div class="bar">
+
+                    <div class="fill away-fill"
+                         id="away-bar"
+                         style="width:0%">
+                    </div>
+
+                </div>
+
+            </div>
+
+            <!-- CHART -->
+
+            <div class="chart-container">
+
+                <canvas id="predictionChart"></canvas>
+
+            </div>
+
+        </div>
+
+
+        <!-- FIXTURES BY GROUP -->
+
+        {% for group_name, teams in groups.items() %}
+
+        <div class="fixtures-section">
+
+            <h2 class="section-title">
+
+                ⚽ {{ group_name }} - Matches
+
+            </h2>
+
+            <div class="fixtures-grid">
+
+                {% for match in fixtures %}
+
+                {% if match.group == group_name %}
+
+                <form class="prediction-form">
+
+                    <div class="fixture-card">
+
+                        <div class="match-group">{{ match.group }}</div>
+
+                        <div class="match-datetime">
+
+                            <span class="match-date">📅 </span>
+
+                            <span class="match-time">⏰ </span>
+
+                        </div>
+
+                        <div class="teams">
+
+                            <div class="team">
+
+                                <h3>
+
+                                    {{ flags.get(match.home, '🏳️') }}
+                                    {{ match.home }}
+
+                                </h3>
+
+                            </div>
+
+                            <span class="vs">
+
+                                VS
+
+                            </span>
+
+                            <div class="team">
+
+                                <h3>
+
+                                    {{ flags.get(match.away, '🏳️') }}
+                                    {{ match.away }}
+
+                                </h3>
+
+                            </div>
+
+                        </div>
+
+                        <input type="hidden"
+                               name="HomeTeam"
+                               value="{{ match.home }}">
+
+                        <input type="hidden"
+                               name="AwayTeam"
+                               value="{{ match.away }}">
+
+                        <button type="button"
+                                onclick="predictMatch(this)">
+
+                            Predict Match
+
+                        </button>
+
+                    </div>
+
+                </form>
+
+                {% endif %}
+
+                {% endfor %}
+
+            </div>
+
+        </div>
+
+        {% endfor %}
+
+    <!-- JAVASCRIPT -->
+
+    <script>
+
+        let chartInstance = null;
+
+        async function predictMatch(button) {
+
+            const form = button.closest("form");
+
+            const homeTeam =
+                form.querySelector(
+                    'input[name="HomeTeam"]'
+                ).value;
+
+            const awayTeam =
+                form.querySelector(
+                    'input[name="AwayTeam"]'
+                ).value;
+
+            const response = await fetch(
+
+                "/api/predict",
+
+                {
+
+                    method: "POST",
+
+                    headers: {
+
+                        "Content-Type":
+                            "application/json"
+                    },
+
+                    body: JSON.stringify({
+
+                        home_team: homeTeam,
+
+                        away_team: awayTeam
+                    })
+                }
+            );
+
+            const data = await response.json();
+
+            if (data.error) {
+
+                alert(data.error);
+
+                return;
+            }
+
+            document.getElementById(
+                "prediction-result"
+            ).style.display = "block";
+
+            let predictionText = "";
+
+            if (data.prediction === "H") {
+
+                predictionText = "🏆 HOME WIN";
+            }
+
+            else if (data.prediction === "D") {
+
+                predictionText = "🤝 DRAW";
+            }
+
+            else {
+
+                predictionText = "✈️ AWAY WIN";
+            }
+
+            document.getElementById(
+                "matchup-text"
+            ).innerText = homeTeam + " vs " + awayTeam;
+
+            document.getElementById(
+                "prediction-title"
+            ).innerText = predictionText;
+
+            document.getElementById(
+                "prediction-score"
+            ).innerText =
+                "Score: " +
+                data.home_goals +
+                " - " +
+                data.away_goals +
+                (data.decided_by && data.decided_by !== "90" ?
+                    " (" + data.decided_by + ")" : "");
+
+            // UPDATE TEXT
+
+            document.getElementById(
+                "home-text"
+            ).innerText =
+                "Home Win — " +
+                data.home_prob + "%";
+
+            document.getElementById(
+                "draw-text"
+            ).innerText =
+                "Draw — " +
+                data.draw_prob + "%";
+
+            document.getElementById(
+                "away-text"
+            ).innerText =
+                "Away Win — " +
+                data.away_prob + "%";
+
+            // UPDATE BARS
+
+            document.getElementById(
+                "home-bar"
+            ).style.width =
+                data.home_prob + "%";
+
+            document.getElementById(
+                "draw-bar"
+            ).style.width =
+                data.draw_prob + "%";
+
+            document.getElementById(
+                "away-bar"
+            ).style.width =
+                data.away_prob + "%";
+
+            // CHART
+
+            const ctx = document.getElementById(
+                "predictionChart"
+            );
+
+            if (chartInstance) {
+
+                chartInstance.destroy();
+            }
+
+            chartInstance = new Chart(ctx, {
+
+                type: "doughnut",
+
+                data: {
+
+                    labels: [
+
+                        "Home Win",
+                        "Draw",
+                        "Away Win"
+                    ],
+
+                    datasets: [{
+
+                        data: [
+
+                            data.home_prob,
+                            data.draw_prob,
+                            data.away_prob
+                        ],
+
+                        backgroundColor: [
+
+                            "#22c55e",
+                            "#facc15",
+                            "#ef4444"
+                        ],
+
+                        borderWidth: 0
+                    }]
+                },
+
+                options: {
+
+                    responsive: true,
+
+                    plugins: {
+
+                        legend: {
+
+                            labels: {
+
+                                color: "white"
+                            }
+                        }
+                    }
+                }
+            });
+
+            document.getElementById(
+                "prediction-result"
+            ).scrollIntoView({
+
+                behavior: "smooth"
+            });
+        }
+
+    </script>
+
+</body>
+
+</html>
